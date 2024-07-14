@@ -1,37 +1,40 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react"
 
 // npx tailwindcss -i ./src/index.css -o ./output.css --watch
 
-function ButtonGroup() {
-  const [selectedButton, setSelectedButton] = useState("button1");
+function ButtonGroup({setDisplay}) {
+  const [selectedButton, setSelectedButton] = useState("Active");
 
   const handleButtonClick = (buttonId) => {
     setSelectedButton(buttonId);
+    console.log(buttonId);
+    setDisplay(buttonId);
   };
 
   return (
     <div className="flex justify-end space-x-2">
       <button
         className={`ml-auto px-1 rounded ${
-          selectedButton === 'button1' ? 'border border-black' : ''
+          selectedButton === 'All' ? 'border border-black' : ''
         }`}
-        onClick={() => handleButtonClick('button1')}
+        onClick={() => handleButtonClick('All')}
       >
       All
       </button>
       <button
         className={`ml-auto px-1 rounded ${
-          selectedButton === 'button2' ? 'border border-black' : ''
+          selectedButton === 'Active' ? 'border border-black' : ''
         }`}
-        onClick={() => handleButtonClick('button2')}
+        onClick={() => handleButtonClick('Active')}
       >
         Active
       </button>
       <button
         className={`ml-auto px-1 rounded ${
-          selectedButton === 'button3' ? 'border border-black' : ''
+          selectedButton === 'Completed' ? 'border border-black' : ''
           }`}
-          onClick={() => handleButtonClick('button3')}
+          onClick={() => handleButtonClick('Completed')}
       >
       Completed
       </button>
@@ -43,14 +46,17 @@ function ButtonGroup() {
 function App() {
 
   const [todos, setTodos] = useState([]);
-
-  const [completed, setCompleted] = useState([]);
+  const [display, setDisplay] = useState("Active");
   
-
   const handleRemoveTask = (task) => {
-    const updatedTodos = todos.filter((todo) => todo !== task);
-    setCompleted(...completed,task);
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id ===task) {
+        return { ...todo, completed: !todo.completed };
+      }
+      return todo;
+    });
     setTodos(updatedTodos);
+    
   };
 
   const [newTask, setNewTask] = useState(''); 
@@ -58,53 +64,81 @@ function App() {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       if (newTask.trim()) {
-        setTodos([...todos,newTask]);
+        setTodos([...todos,{'id':todos.length+1,"task":newTask,"completed":false}]);
         setNewTask('');
       }
     }
   };
+  const activeTasks = todos.filter((task) => !task.completed).length;
   return (
-  <>
-  <div className="mx-auto w-2/6 p-4 mt-10 bg-white border">
-  <div className="text-3xl font-bold text-center m-3">Things To Do</div>
+    
+    <>
+    <div className="mx-auto w-2/6 p-4 mt-10 bg-white border">
+    
+<div className="text-3xl font-bold text-center m-3">Things To Do</div>
   
+  <div>
   <input
-    placeholder="Add new task"
-    className="w-full border focus:border-blue-300 p-1"
-    type="text"
-    value={newTask}
-    onChange={(e) => setNewTask(e.target.value)} 
-    onKeyPress={handleKeyPress}
+  placeholder="Add new task"
+  className="w-full border p-1"
+  type="text"
+  value={newTask}
+  onChange={(e) => setNewTask(e.target.value)} 
+  onKeyPress={handleKeyPress}
   />
+  </div>
 
-
-      
-    <div className="max-h-4/6 overflow-y-auto">
-    {todos && todos.map((todo)=>{return(
-      <div className="" key={todo}>
-      <hr className="my-2 border-gray-300"/>
-      <input type="checkbox" className="mr-2" 
-      onChange={() => handleRemoveTask(todo)}
-      />
-      <p className="inline">{todo}</p>
-      </div>
-      )
-      })}
-      </div>
+    <div className="h-96 overflow-y-auto overflow-hidden">
+    <ul className="todo-list">
+        {todos.map((todo) => {
+          if (display === 'Active' && !todo.completed) {
+            return (
+              <li key={todo.id}>
+              <hr className="mt-1"/>
+              <input type="checkbox" className="mr-2" 
+              onChange={() => handleRemoveTask(todo.id)}
+              />
+              {todo.task}
+              </li>
+            );
+          } else if (display === 'Completed' && todo.completed) {
+            return (
+              <li key={todo.id}>
+              <hr className="mt-1"/>
+              <input type="checkbox" className="mr-2" checked
+              onChange={() => handleRemoveTask(todo.id)}
+              />
+              <span className="line-through">{todo.task}</span>
+              </li>
+            );
+          } else if (display === 'All') {
+            return (
+              <li key={todo.id}>
+              <hr className="mt-1"/>
+              {!todo.completed && <input type="checkbox" className="mr-2" 
+              onChange={() => handleRemoveTask(todo.id)}
+              />}
+                {todo.task}
+              </li>
+            );
+          }
+          return null; 
+        })}
+      </ul>
+    </div>
+  
       
     </div>
     <div className="mx-auto w-2/6 p-3 bg-green-200 border flex text-xs relative">
         
-    <div>
-    search button
-    </div>
-    <div className=""></div>
+    
+    <div className="ml-2"></div>
         <div>
-        {todos.length} items left
+        {activeTasks ? activeTasks + " items left" : "All done" } 
         </div>
         
-       <div className="absolute right-1">
-       <ButtonGroup />
+       <div className="absolute right-2">
+       <ButtonGroup setDisplay={setDisplay}/>
        </div> 
 
         </div>
@@ -114,3 +148,5 @@ function App() {
 }
 
 export default App
+
+//     
